@@ -5,13 +5,18 @@ import {
     TrendingDown,
     DollarSign,
     Activity,
-    ArrowRight
+    ArrowRight,
+    Link as LinkIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { ConnectedBrokerCard } from "@/components/broker/ConnectedBrokerCard";
+import { useBrokerStore } from "@/lib/broker-store";
 
 export default function DashboardPage() {
+    const { isConnected, portfolioData } = useBrokerStore();
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -30,10 +35,38 @@ export default function DashboardPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: "Total Portfolio Value", value: "₹8,45,250", change: "+1.2%", trend: "up", icon: DollarSign, color: "text-green-400" },
-                    { label: "Day's P&L", value: "+₹12,450", change: "+1.5%", trend: "up", icon: TrendingUp, color: "text-green-400" },
-                    { label: "Active Strategies", value: "2 Running", change: "85% Win Rate", trend: "neutral", icon: Activity, color: "text-blue-400" },
-                    { label: "Open Positions", value: "5 Active", change: "2 Pending", trend: "neutral", icon: Activity, color: "text-purple-400" },
+                    {
+                        label: "Total Portfolio Value",
+                        value: portfolioData ? `₹${portfolioData.totalValue.toLocaleString('en-IN')}` : "₹8,45,250",
+                        change: "+1.2%",
+                        trend: "up",
+                        icon: DollarSign,
+                        color: "text-green-400"
+                    },
+                    {
+                        label: "Day's P&L",
+                        value: portfolioData ? `${portfolioData.todaysPnL >= 0 ? '+' : ''}₹${portfolioData.todaysPnL.toLocaleString('en-IN')}` : "+₹12,450",
+                        change: "+1.5%",
+                        trend: "up",
+                        icon: TrendingUp,
+                        color: portfolioData && portfolioData.todaysPnL >= 0 ? "text-green-400" : "text-red-400"
+                    },
+                    {
+                        label: "Active Strategies",
+                        value: "2 Running",
+                        change: "85% Win Rate",
+                        trend: "neutral",
+                        icon: Activity,
+                        color: "text-blue-400"
+                    },
+                    {
+                        label: "Open Positions",
+                        value: portfolioData ? `${portfolioData.holdings.length} Active` : "5 Active",
+                        change: isConnected ? "From Broker" : "2 Pending",
+                        trend: "neutral",
+                        icon: Activity,
+                        color: "text-purple-400"
+                    },
                 ].map((stat, i) => (
                     <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
                         <div className="flex justify-between items-start mb-4">
@@ -49,6 +82,24 @@ export default function DashboardPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Connected Broker Status */}
+            {isConnected ? (
+                <ConnectedBrokerCard />
+            ) : (
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex items-center justify-between">
+                    <div>
+                        <h3 className="font-bold text-white mb-1">Connect Your Broker</h3>
+                        <p className="text-sm text-slate-400">Link your demat account to enable auto-trading and portfolio sync</p>
+                    </div>
+                    <Link href="/dashboard/connect-broker">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                            <LinkIcon className="w-4 h-4 mr-2" />
+                            Connect Now
+                        </Button>
+                    </Link>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Market Overview */}

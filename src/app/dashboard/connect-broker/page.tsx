@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Lock, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrokerAuthModal } from "@/components/broker/BrokerAuthModal";
+import { useBrokerStore, BrokerType } from "@/lib/broker-store";
+import { simulateOAuthLogin } from "@/lib/broker-api";
 
 const brokers = [
-    { id: 1, name: "Zerodha", letter: "Z", color: "bg-green-500", badge: "Most Popular", features: ["Real-time API access", "Algo trading supported", "Low brokerage fees"] },
-    { id: 2, name: "Groww", letter: "G", color: "bg-blue-500", badge: "Recommended", features: ["Easy setup process", "Mobile-friendly", "Zero commission on stocks"] },
-    { id: 3, name: "Upstox", letter: "U", color: "bg-purple-600", badge: "Fast Execution", features: ["Low latency trading", "Advanced charting tools", "Competitive pricing"] },
-    { id: 4, name: "Angel One", letter: "A", color: "bg-orange-500", badge: "Full Service", features: ["Research reports", "Advisory services", "Multiple platforms"] },
-    { id: 5, name: "5paisa", letter: "+", color: "bg-slate-700", badge: "Coming Soon", features: ["Integration in progress"] },
-    { id: 6, name: "ICICI Direct", letter: "+", color: "bg-slate-700", badge: "Coming Soon", features: ["Integration in progress"] }
+    { id: "zerodha" as BrokerType, name: "Zerodha", letter: "Z", color: "bg-green-500", badge: "Most Popular", features: ["Real-time API access", "Algo trading supported", "Low brokerage fees"] },
+    { id: "groww" as BrokerType, name: "Groww", letter: "G", color: "bg-blue-500", badge: "Recommended", features: ["Easy setup process", "Mobile-friendly", "Zero commission on stocks"] },
+    { id: "upstox" as BrokerType, name: "Upstox", letter: "U", color: "bg-purple-600", badge: "Fast Execution", features: ["Low latency trading", "Advanced charting tools", "Competitive pricing"] },
+    { id: "angelone" as BrokerType, name: "Angel One", letter: "A", color: "bg-orange-500", badge: "Full Service", features: ["Research reports", "Advisory services", "Multiple platforms"] },
+    { id: null, name: "5paisa", letter: "+", color: "bg-slate-700", badge: "Coming Soon", features: ["Integration in progress"] },
+    { id: null, name: "ICICI Direct", letter: "+", color: "bg-slate-700", badge: "Coming Soon", features: ["Integration in progress"] }
 ];
 
 const securityFeatures = [
@@ -22,10 +26,47 @@ const securityFeatures = [
 ];
 
 export default function ConnectBrokerPage() {
-    const [selectedBroker, setSelectedBroker] = useState<number | null>(null);
+    const router = useRouter();
+    const [selectedBroker, setSelectedBroker] = useState<BrokerType>(null);
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [connectingBroker, setConnectingBroker] = useState<BrokerType>(null);
+    const connectBroker = useBrokerStore(state => state.connectBroker);
+
+    const handleConnect = (brokerId: BrokerType) => {
+        if (!brokerId) return;
+        setConnectingBroker(brokerId);
+        setAuthModalOpen(true);
+    };
+
+    const handleAuthSuccess = async () => {
+        if (!connectingBroker) return;
+
+        try {
+            // Simulate OAuth and fetch portfolio data
+            const portfolioData = await simulateOAuthLogin(connectingBroker);
+
+            // Update store
+            connectBroker(connectingBroker, portfolioData);
+
+            // Redirect to dashboard
+            router.push('/dashboard');
+        } catch (error) {
+            console.error('Failed to connect broker:', error);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-950 p-8">
+            <BrokerAuthModal
+                isOpen={authModalOpen}
+                broker={connectingBroker}
+                onClose={() => {
+                    setAuthModalOpen(false);
+                    setConnectingBroker(null);
+                }}
+                onSuccess={handleAuthSuccess}
+            />
+
             {/* Progress Header */}
             <div className="max-w-5xl mx-auto mb-8">
                 <div className="flex items-center justify-between mb-2">
@@ -35,7 +76,7 @@ export default function ConnectBrokerPage() {
                         </div>
                         <span className="text-lg font-bold text-white">Marketwise</span>
                     </div>
-                    <button className="text-slate-400 hover:text-white">
+                    <button className="text-slate-400 hover:text-white" onClick={() => router.push('/dashboard')}>
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -83,7 +124,7 @@ export default function ConnectBrokerPage() {
 
                         return (
                             <motion.div
-                                key={broker.id}
+                                key={broker.name}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
@@ -128,6 +169,10 @@ export default function ConnectBrokerPage() {
                                 {/* Connect Button */}
                                 <Button
                                     disabled={isComingSoon}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (broker.id) handleConnect(broker.id);
+                                    }}
                                     className={`w-full ${isComingSoon
                                         ? "bg-slate-800 text-slate-500 cursor-not-allowed"
                                         : isSelected
@@ -135,7 +180,7 @@ export default function ConnectBrokerPage() {
                                             : "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white"
                                         }`}
                                 >
-                                    {isComingSoon ? "Coming Soon" : isSelected ? "Selected" : `Connect ${broker.name}`}
+                                    {isComingSoon ? "Coming Soon" : `Connect ${broker.name}`}
                                 </Button>
                             </motion.div>
                         );
@@ -168,11 +213,12 @@ export default function ConnectBrokerPage() {
 
                 {/* Bottom Actions */}
                 <div className="flex justify-between items-center mt-8">
-                    <Button variant="ghost" className="text-slate-400">
+                    <Button variant="ghost" className="text-slate-400" onClick={() => router.push('/dashboard')}>
                         Skip for Now
                     </Button>
                     <Button
                         disabled={!selectedBroker}
+                        onClick={() => selectedBroker && handleConnect(selectedBroker)}
                         className="bg-indigo-600 hover:bg-indigo-700 px-8"
                     >
                         Continue →
