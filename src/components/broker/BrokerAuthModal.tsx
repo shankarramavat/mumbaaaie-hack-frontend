@@ -70,7 +70,7 @@ export function BrokerAuthModal({ isOpen, broker, onClose, onSuccess }: BrokerAu
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -85,34 +85,34 @@ export function BrokerAuthModal({ isOpen, broker, onClose, onSuccess }: BrokerAu
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                    className="relative bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 ${getBrokerColor(broker)} rounded-lg flex items-center justify-center`}>
-                                <span className="text-white text-lg font-bold">
+                    <div className="flex items-center justify-between mb-4 sm:mb-6">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 ${getBrokerColor(broker)} rounded-lg flex items-center justify-center`}>
+                                <span className="text-white text-lg sm:text-xl font-bold">
                                     {getBrokerDisplayName(broker).charAt(0)}
                                 </span>
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Connect {getBrokerDisplayName(broker)}</h2>
-                                <p className="text-xs text-slate-400">Secure OAuth 2.0 Authentication</p>
+                                <h2 className="text-base sm:text-lg font-bold text-white">Connect {getBrokerDisplayName(broker)}</h2>
+                                <p className="text-[10px] sm:text-xs text-slate-400">Secure OAuth 2.0 Authentication</p>
                             </div>
                         </div>
                         <button
                             onClick={handleClose}
-                            className="text-slate-400 hover:text-white transition-colors"
+                            className="text-slate-400 hover:text-white transition-colors p-1"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Security Badge */}
-                    <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-lg p-3 mb-6">
-                        <Shield className="w-4 h-4 text-green-400" />
-                        <span className="text-xs text-green-400">
+                    <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-lg p-2.5 sm:p-3 mb-4 sm:mb-6">
+                        <Shield className="w-4 h-4 text-green-400 flex-shrink-0" />
+                        <span className="text-[11px] sm:text-xs text-green-400">
                             256-bit encrypted connection. Your credentials are secure.
                         </span>
                     </div>
